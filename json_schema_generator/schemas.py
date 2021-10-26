@@ -1,3 +1,4 @@
+import json
 from django.apps import apps
 from django.conf import settings
 from pathlib import Path
@@ -59,7 +60,12 @@ class Schema(object):
                 'nullable': field.null,
             }
             if hasattr(field, 'has_default') and field.has_default():
-                options['default'] = field.default
+                if hasattr(field.default, '__call__'):
+                    options['default_func'] = (f"{field.default.__module__}."
+                                               f"{field.default.__name__}()")
+                else:
+                    options['default'] = field.default
+
             if hasattr(field, 'db_index') and field.db_index:
                 options['index'] = field.db_index
                 self.stats['indexes'] += 1
@@ -90,6 +96,6 @@ class Schema(object):
         print(path)
 
         with open(path, 'w') as f:
-            f.write(str(self.schema))
+            json.dump(self.schema, f)
 
     # TODO get_constraints(self, field)
