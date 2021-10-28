@@ -7,38 +7,34 @@ from pathlib import Path
 class Schema(object):
     def __init__(self, *args, **kwargs):
         self.schema = []
-        self.stats = {
-            'apps': 0,
-            'models': 0,
-            'db_tables': 0,
-            'fields': 0,
-            'indexes': 0,
-            'relations': 0,
-        }
 
     def generate(self, save_file=True):
         """
         Entry point for the schema generator
         """
+        self.schema = self.get_apps()
+        if save_file:
+            self.write_file()
+
+    def get_apps(self):
+        """
+        Return the list of all installed applications with all models
+        """
+        app_list = []
         for app in apps.get_app_configs():
-            self.stats['apps'] += 1
-            self.schema.append({
+            app_list.append({
                 'application': app.name,
                 'models': self.get_models(app)
             })
-
-        if save_file:
-            self.write_file()
-        print(self.stats)
+        return app_list
 
     def get_models(self, app):
         """
-        Return the models list of the django application with some options
+        Return the models list in the application with some options and
+        all fields
         """
         model_list = []
         for model in app.get_models():
-            self.stats['models'] += 1
-            self.stats['db_tables'] += 1
             model_list.append({
                 'name': model.__name__,
                 'db_table': model._meta.db_table,
@@ -53,22 +49,21 @@ class Schema(object):
         """
         field_list = []
         for field in model._meta.get_fields():
-            self.stats['fields'] += 1
             options = {
                 'name': field.name,
                 'django_type': field.get_internal_type(),
                 'nullable': field.null,
             }
+            if hasattr(field, 'max_length') and field.max_length:
+                options['max_length'] = field.max_length
+            if hasattr(field, 'primary_key') and field.primary_key:
+                options['primary_key'] = field.primary_key
             if hasattr(field, 'has_default') and field.has_default():
                 if hasattr(field.default, '__call__'):
                     options['default_func'] = (f"{field.default.__module__}."
                                                f"{field.default.__name__}()")
                 else:
                     options['default'] = field.default
-
-            if hasattr(field, 'db_index') and field.db_index:
-                options['index'] = field.db_index
-                self.stats['indexes'] += 1
 
             if field.is_relation:
                 options['relation'] = self.get_relation(field)
@@ -80,8 +75,13 @@ class Schema(object):
         """
         Return the dict of the relation options of the field
         """
-        self.stats['relations'] += 1
-        return {}
+        # TODO: add field.through._meta.db_table for many_to_many relation
+        return {
+            'one_to_one': field.one_to_one,
+            'one_to_many': field.one_to_many,
+            'many_to_one': field.many_to_one,
+            'many_to_many': field.many_to_many,
+        }
 
     def write_file(self):
         """
@@ -93,7 +93,6 @@ class Schema(object):
         filename = getattr(settings, 'SCHEMA_GENERATOR_FILENAME',
                            '.forestadmin-schema.json')
         path = str(Path(directory) / Path(filename))
-        print(path)
 
         with open(path, 'w') as f:
             json.dump(self.schema, f)
