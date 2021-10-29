@@ -49,23 +49,48 @@ You can set some options:
 
 The generated schema file is composed of the list of the all installed apps in your Django project. For each Django app you can find the list of models with some options and for each model you can find the list of fields and some options.
 
-A example of the file structure:
+### File structure
+
+* **`Root`**: a list of `App` object
+* **`App`**
+    * **application**: app name
+    * **models**: a list of `Model` object
+* **`Model`**
+    * **name**: model name 
+    * **db_table**: the name of database table
+    * **fields**: list of `Field` object
+* **`Field`**
+    * **name**: field name
+    * **django_type**: Django type of the field
+    * **nullable**: it defines if it's nullable field or not
+    * **max_length**: *[occasional]* it defines the max length of the field
+    * **primary_key**: *[occasional]* it defines if it's the primary key field
+    * **default**: *[occasional]* it defines the static default value
+    * **default_func**: *[occasional]* it defines the method which used for the default value
+    * **relation**: *[occasional]* a `Relation` object if it's a relation field
+* **`Relation`**
+    * **one_to_one**: it defines if it's an one_to_one relation
+    * **one_to_many**: it defines if it's an one_to_many relation
+    * **many_to_one**: it defines if it's a many_to_one relation
+    * **many_to_many**: it defines if it's a many_to_many relation
+
+### An example
 ```json
 [
 {
-    "application": "my_app", // app name
-    "models": [ // list of app models
+    "application": "my_app",
+    "models": [
     {
-        "name": "MyModel", // model name
-        "db_table": "my_app_mymodel", // the name of database table
-        "fields": [ // list of model fields
+        "name": "MyModel",
+        "db_table": "my_app_mymodel",
+        "fields": [
         {
-            "name": "id", // field name
-            "django_type": "UUIDField", // Django type of the field
-            "nullable": false, // it defines if it's nullable field or not
-            "max_length": 32, // [optional] it defines the max length of the field
-            "primary_key": true, // [optional] it defines if it's the primary key field
-            "default_func": "uuid.uuid4()" // [optional] it defines the method which used for the default value
+            "name": "id",
+            "django_type": "UUIDField",
+            "nullable": false,
+            "max_length": 32,
+            "primary_key": true,
+            "default_func": "uuid.uuid4()"
         },
         {
             "name": "name",
@@ -77,13 +102,13 @@ A example of the file structure:
             "name": "activate",
             "django_type": "BooleanField",
             "nullable": false,
-            "default": true // [optional] it defines the static default value
+            "default": true
         },
         {
             "name": "many_to_many",
             "django_type": "ManyToManyField",
             "nullable": false,
-            "relation": // [optional] it defines the relation properties
+            "relation":
             {
                 "one_to_one": false,
                 "one_to_many": false,
@@ -91,9 +116,9 @@ A example of the file structure:
                 "many_to_many": true
             }
         }]
-    }, // other models
+    },
     ]
-}, // other apps
+},
 ]
 ```
 
