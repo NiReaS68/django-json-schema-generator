@@ -85,11 +85,13 @@ class Schema(object):
 
     def write_file(self):
         """
-        TODO: add format choices, with yaml for example, but change the app
-        name for more coherence (remove "json"). It can be a setting:
+        TODO: add format choices, the yaml format for example, but change the
+        app name for more coherence (remove "json"). It can be a parameter
+        of this method or a new setting:
             getattr(settings, 'SCHEMA_GENERATOR_FORMAT', 'json')
         """
-        directory = getattr(settings, 'SCHEMA_GENERATOR_PATH', str(Path.cwd()))
+        directory = getattr(settings, 'SCHEMA_GENERATOR_DIRECTORY',
+                            str(Path.cwd()))
         filename = getattr(settings, 'SCHEMA_GENERATOR_FILENAME',
                            '.forestadmin-schema.json')
         path = str(Path(directory) / Path(filename))

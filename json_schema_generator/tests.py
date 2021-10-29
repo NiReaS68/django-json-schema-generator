@@ -126,7 +126,7 @@ class SchemaTest(TestCase):
         all_relations = [field for field in res if 'relation' in field]
         self.assertEqual(len(all_relations), 3)
 
-    @override_settings(SCHEMA_GENERATOR_PATH=PATH_TEST)
+    @override_settings(SCHEMA_GENERATOR_DIRECTORY=PATH_TEST)
     @override_settings(SCHEMA_GENERATOR_FILENAME=FILENAME)
     def test_file_creation_after_generate(self):
         Schema().generate()
